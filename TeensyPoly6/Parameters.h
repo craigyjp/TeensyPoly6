@@ -11,6 +11,7 @@ byte afterTouchDepth;
 byte NP;
 
 int cutoffstr = 0;
+float LFOFreqstr = 0;
 
 byte ccChannel = midiChannel;
 byte midiOutCh = midiChannel;

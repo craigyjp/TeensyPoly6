@@ -963,6 +963,8 @@ FLASHMEM void updateFilterDecay() {
 
 FLASHMEM void updateFilterAmount() {
   filtAmt = (float)mux2 / 512 - 1;
+  showCurrentParameterPage("Filter Env", String(mux2 >> 3));
+  startParameterDisplay();
   midiCCOut(CCvcf_env_amount, (mux2 >> 3), 1);
 }
 
@@ -993,6 +995,8 @@ FLASHMEM void updateDecay() {
 
 FLASHMEM void updateSustain() {
   envSus = (float)mux22 / 100;
+  showCurrentParameterPage("Amp Sustain", String(map(mux22, 0, 1023, 0, 100)));
+  startParameterDisplay();
   midiCCOut(CCvca_sustain, (mux22 >> 3), 1);
 }
 
@@ -1007,6 +1011,8 @@ FLASHMEM void updateLFOAmount() {
 
 FLASHMEM void updateLFOFreq() {
   lfoAfreq = 20 * (float)mux4 / 1024 + 0.1;
+  showCurrentParameterPage("LFO Rate", String(LFOFreqstr) + " Hz");
+  startParameterDisplay();
   midiCCOut(CClfo_frequency, (mux4 >> 3), 1);
 }
 
@@ -1024,9 +1030,10 @@ FLASHMEM void updateLFODecay() {
 
 FLASHMEM void updateLFOSustain() {
   lfoAsus = (float)mux7 / 1024;
+  showCurrentParameterPage("LFO Sustain", String(map(mux7, 0, 1023, 0, 100)));
+  startParameterDisplay();
   midiCCOut(CClfo_sustain, (mux7 >> 3), 1);
 }
-
 
 FLASHMEM void updateLFODestination() {
   if (LFOA_DEST_1 > 511) {  //lfo - pitch
@@ -1069,6 +1076,8 @@ FLASHMEM void updateLFOShape() {
 
 FLASHMEM void updatePWAmount() {
   lfoBamp = (float)mux15 / 1023;
+  showCurrentParameterPage("PWM Depth", String(mux15 >> 3));
+  startParameterDisplay();
   midiCCOut(CCoscpwm, (mux15 >> 3), 1);
 }
 
@@ -1199,6 +1208,7 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CClfo_frequency:
       mux4 = (value << 3);
+      LFOFreqstr = LFOTEMPO[value];
       updateLFOFreq();
       break;
 
@@ -1604,6 +1614,7 @@ FLASHMEM void checkMux() {
         break;
       case 4:
         mux4 = mux1Read;
+        LFOFreqstr = LFOTEMPO[mux4 / 8];
         updateLFOFreq();
         break;
       case 5:
@@ -1709,6 +1720,7 @@ FLASHMEM void checkMux() {
         break;
       case 1:
         mux25 = mux4Read;
+        cutoffstr = FILTERFREQS[mux25 / 8];
         updateCutoff();
         break;
       case 2:
