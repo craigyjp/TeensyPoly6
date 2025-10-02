@@ -751,6 +751,8 @@ void allNotesOff() {
 
 FLASHMEM void updateVolume() {
   mainVol = (float)mux23 / 1024;
+  showCurrentParameterPage("Volume", String(mux23 >> 3));
+  updateScreen();
   midiCCOut(CCvolumeControl, (mux23 >> 3), 1);
 }
 
@@ -1812,59 +1814,48 @@ void updateEEPromSettings() {
 void checkSwitches() {
 
   saveButton.update();
-  if (saveButton.read() == LOW && saveButton.duration() > HOLD_DURATION) {
+  if (saveButton.held()) {
     switch (state) {
       case PARAMETER:
       case PATCH:
         state = DELETE;
-        saveButton.write(HIGH);  //Come out of this state
-        del = true;              //Hack
-        updateScreen();
         break;
     }
-  } else if (saveButton.risingEdge()) {
-    if (!del) {
-      switch (state) {
-        case PARAMETER:
-          if (patches.size() < PATCHES_LIMIT) {
-            resetPatchesOrdering();  //Reset order of patches from first patch
-            if (addingPatch) {
-              patches.push({ patches.size() + 1, INITPATCHNAME });
-            } else {
-              patches.push({ patchNo, patchName });
-            }
-            state = SAVE;
-          }
-          updateScreen();
-          break;
-        case SAVE:
-          //Save as new patch with INITIALPATCH name or overwrite existing keeping name - bypassing patch renaming
-          patchName = patches.last().patchName;
-          state = PATCH;
-          savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-          showPatchPage(patches.last().patchNo, patches.last().patchName);
-          patchNo = patches.last().patchNo;
-          loadPatches();  //Get rid of pushed patch if it wasn't saved
-          setPatchesOrdering(patchNo);
-          renamedPatch = "";
-          state = PARAMETER;
-          updateScreen();
-          break;
-        case PATCHNAMING:
-          if (renamedPatch.length() > 0) patchName = renamedPatch;  //Prevent empty strings
-          state = PATCH;
-          savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-          showPatchPage(patches.last().patchNo, patchName);
-          patchNo = patches.last().patchNo;
-          loadPatches();  //Get rid of pushed patch if it wasn't saved
-          setPatchesOrdering(patchNo);
-          renamedPatch = "";
-          state = PARAMETER;
-          updateScreen();
-          break;
-      }
-    } else {
-      del = false;
+  } else if (saveButton.numClicks() == 1) {
+    switch (state) {
+      case PARAMETER:
+        if (patches.size() < PATCHES_LIMIT) {
+          resetPatchesOrdering();  //Reset order of patches from first patch
+          patches.push({ patches.size() + 1, INITPATCHNAME });
+          state = SAVE;
+        }
+        updateScreen();
+        break;
+      case SAVE:
+        //Save as new patch with INITIALPATCH name or overwrite existing keeping name - bypassing patch renaming
+        patchName = patches.last().patchName;
+        state = PATCH;
+        savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
+        showPatchPage(patches.last().patchNo, patches.last().patchName);
+        patchNo = patches.last().patchNo;
+        loadPatches();  //Get rid of pushed patch if it wasn't saved
+        setPatchesOrdering(patchNo);
+        renamedPatch = "";
+        state = PARAMETER;
+        updateScreen();
+        break;
+      case PATCHNAMING:
+        if (renamedPatch.length() > 0) patchName = renamedPatch;  //Prevent empty strings
+        state = PATCH;
+        savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
+        showPatchPage(patches.last().patchNo, patchName);
+        patchNo = patches.last().patchNo;
+        loadPatches();  //Get rid of pushed patch if it wasn't saved
+        setPatchesOrdering(patchNo);
+        renamedPatch = "";
+        state = PARAMETER;
+        updateScreen();
+        break;
     }
   }
 
@@ -1895,56 +1886,50 @@ void checkSwitches() {
   }
 
   backButton.update();
-  if (backButton.read() == LOW && backButton.duration() > HOLD_DURATION) {
+  if (backButton.held()) {
     //If Back button held, Panic - all notes off
     allNotesOff();
-    backButton.write(HIGH);  //Come out of this state
-    panic = true;
-    updateScreen();                      //Hack
-  } else if (backButton.risingEdge()) {  //cannot be fallingEdge because holding button won't work
-    if (!panic) {
-      switch (state) {
-        case RECALL:
-          setPatchesOrdering(patchNo);
-          state = PARAMETER;
-          updateScreen();
-          break;
-        case SAVE:
-          renamedPatch = "";
-          state = PARAMETER;
-          loadPatches();  //Remove patch that was to be saved
-          setPatchesOrdering(patchNo);
-          updateScreen();
-          break;
-        case PATCHNAMING:
-          charIndex = 0;
-          renamedPatch = "";
-          state = SAVE;
-          updateScreen();
-          break;
-        case DELETE:
-          setPatchesOrdering(patchNo);
-          state = PARAMETER;
-          updateScreen();
-          break;
-        case SETTINGS:
-          state = PARAMETER;
-          updateScreen();
-          break;
-        case SETTINGSVALUE:
-          state = SETTINGS;
-          showSettingsPage();
-          updateScreen();
-          break;
-      }
-    } else {
-      panic = false;
+    updateScreen();  //Hack
+  } else if (backButton.numClicks() == 1) {
+    switch (state) {
+      case RECALL:
+        setPatchesOrdering(patchNo);
+        state = PARAMETER;
+        updateScreen();
+        break;
+      case SAVE:
+        renamedPatch = "";
+        state = PARAMETER;
+        loadPatches();  //Remove patch that was to be saved
+        setPatchesOrdering(patchNo);
+        updateScreen();
+        break;
+      case PATCHNAMING:
+        charIndex = 0;
+        renamedPatch = "";
+        state = SAVE;
+        updateScreen();
+        break;
+      case DELETE:
+        setPatchesOrdering(patchNo);
+        state = PARAMETER;
+        updateScreen();
+        break;
+      case SETTINGS:
+        state = PARAMETER;
+        updateScreen();
+        break;
+      case SETTINGSVALUE:
+        state = SETTINGS;
+        showSettingsPage();
+        updateScreen();
+        break;
     }
   }
 
   //Encoder switch
   recallButton.update();
-  if (recallButton.read() == LOW && recallButton.duration() > HOLD_DURATION) {
+  if (recallButton.held()) {
     //If Recall button held, return to current patch setting
     //which clears any changes made
     state = PATCH;
@@ -1952,69 +1937,63 @@ void checkSwitches() {
     patchNo = patches.first().patchNo;
     recallPatch(patchNo);
     state = PARAMETER;
-    recallButton.write(HIGH);  //Come out of this state
-    recall = true;             //Hack
     updateScreen();
-  } else if (recallButton.risingEdge()) {
-    if (!recall) {
-      switch (state) {
-        case PARAMETER:
-          state = RECALL;  //show patch list
-          updateScreen();
-          break;
-        case RECALL:
-          state = PATCH;
-          //Recall the current patch
-          patchNo = patches.first().patchNo;
-          recallPatch(patchNo);
-          state = PARAMETER;
-          updateScreen();
-          break;
-        case SAVE:
-          showRenamingPage(patches.last().patchName);
-          patchName = patches.last().patchName;
-          state = PATCHNAMING;
-          updateScreen();
-          break;
-        case PATCHNAMING:
-          if (renamedPatch.length() < 13) {
-            renamedPatch.concat(String(currentCharacter));
-            charIndex = 0;
-            currentCharacter = CHARACTERS[charIndex];
-            showRenamingPage(renamedPatch);
-          }
-          updateScreen();
-          break;
-        case DELETE:
-          //Don't delete final patch
-          if (patches.size() > 1) {
-            state = DELETEMSG;
-            patchNo = patches.first().patchNo;     //PatchNo to delete from SD card
-            patches.shift();                       //Remove patch from circular buffer
-            deletePatch(String(patchNo).c_str());  //Delete from SD card
-            loadPatches();                         //Repopulate circular buffer to start from lowest Patch No
-            renumberPatchesOnSD();
-            loadPatches();                      //Repopulate circular buffer again after delete
-            patchNo = patches.first().patchNo;  //Go back to 1
-            recallPatch(patchNo);               //Load first patch
-          }
-          state = PARAMETER;
-          updateScreen();
-          break;
-        case SETTINGS:
-          state = SETTINGSVALUE;
-          showSettingsPage();
-          updateScreen();
-          break;
-        case SETTINGSVALUE:
-          settings::save_current_value();
-          state = SETTINGS;
-          showSettingsPage();
-          updateScreen();
-          break;
-      }
-    } else {
-      recall = false;
+  } else if (recallButton.numClicks() == 1) {
+    switch (state) {
+      case PARAMETER:
+        state = RECALL;  //show patch list
+        updateScreen();
+        break;
+      case RECALL:
+        state = PATCH;
+        //Recall the current patch
+        patchNo = patches.first().patchNo;
+        recallPatch(patchNo);
+        state = PARAMETER;
+        updateScreen();
+        break;
+      case SAVE:
+        showRenamingPage(patches.last().patchName);
+        patchName = patches.last().patchName;
+        state = PATCHNAMING;
+        updateScreen();
+        break;
+      case PATCHNAMING:
+        if (renamedPatch.length() < 13) {
+          renamedPatch.concat(String(currentCharacter));
+          charIndex = 0;
+          currentCharacter = CHARACTERS[charIndex];
+          showRenamingPage(renamedPatch);
+        }
+        updateScreen();
+        break;
+      case DELETE:
+        //Don't delete final patch
+        if (patches.size() > 1) {
+          state = DELETEMSG;
+          patchNo = patches.first().patchNo;     //PatchNo to delete from SD card
+          patches.shift();                       //Remove patch from circular buffer
+          deletePatch(String(patchNo).c_str());  //Delete from SD card
+          loadPatches();                         //Repopulate circular buffer to start from lowest Patch No
+          renumberPatchesOnSD();
+          loadPatches();                      //Repopulate circular buffer again after delete
+          patchNo = patches.first().patchNo;  //Go back to 1
+          recallPatch(patchNo);               //Load first patch
+        }
+        state = PARAMETER;
+        updateScreen();
+        break;
+      case SETTINGS:
+        state = SETTINGSVALUE;
+        showSettingsPage();
+        updateScreen();
+        break;
+      case SETTINGSVALUE:
+        settings::save_current_value();
+        state = SETTINGS;
+        showSettingsPage();
+        updateScreen();
+        break;
     }
   }
 }
@@ -2048,7 +2027,6 @@ void checkEncoder() {
         patches.push(patches.shift());
         patchNo = patches.first().patchNo;
         recallPatch(patchNo);
-        midiProgOut(patchNo, 1);
         state = PARAMETER;
         updateScreen();
         break;
@@ -2089,7 +2067,6 @@ void checkEncoder() {
         patches.unshift(patches.pop());
         patchNo = patches.first().patchNo;
         recallPatch(patchNo);
-        midiProgOut(patchNo, 1);
         state = PARAMETER;
         updateScreen();
         break;

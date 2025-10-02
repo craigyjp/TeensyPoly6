@@ -1,4 +1,4 @@
-const char* VERSION = "V1.7";
+const char* VERSION = "V1.8";
 
 #define RE_READ -9
 #define  NO_OF_VOICES 6

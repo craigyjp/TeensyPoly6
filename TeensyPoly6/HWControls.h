@@ -106,13 +106,11 @@ int LFOA_SHAPE_2;
 
 //These are pushbuttons and require debouncing
 
-Bounce recallButton = Bounce(RECALL_SW, DEBOUNCE); //On encoder
-boolean recall = true; //Hack for recall button
-Bounce saveButton = Bounce(SAVE_SW, DEBOUNCE);
-boolean del = true; //Hack for save button
-TButton settingsButton{SETTINGS_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION};
-Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
-boolean panic = true; //Hack for back button
+TButton saveButton{ SAVE_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION };
+TButton settingsButton{ SETTINGS_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION };
+TButton backButton{ BACK_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION };
+TButton recallButton{ RECALL_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION }; // on encoder
+
 Encoder encoder(ENCODER_PINB, ENCODER_PINA);//This often needs the pins swapping depending on the encoder
 
 void setupHardware()
