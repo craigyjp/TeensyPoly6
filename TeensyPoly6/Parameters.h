@@ -1,6 +1,10 @@
 //Values below are just for initialising and will be changed when synth is initialised to current panel controls & EEPROM settings
 byte midiChannel = 0;
 
+unsigned long lastDisplayTriggerTime = 0;
+bool waitingToUpdate = false;
+const unsigned long displayTimeout = 2000;  // e.g. 5 seconds
+
 byte pitchBendRange;
 byte modWheelDepth;
 byte afterTouchDepth;

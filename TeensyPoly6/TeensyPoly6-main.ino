@@ -311,6 +311,14 @@ void setup() {
   updateScreen();
 }
 
+void startParameterDisplay() {
+  state = PARAMETER;
+  updateScreen();
+
+  lastDisplayTriggerTime = millis();
+  waitingToUpdate = true;
+}
+
 int getVoiceNo(int note) {
   voiceToReturn = -1;       //Initialise to 'null'
   earliestTime = millis();  //Initialise to now
@@ -752,7 +760,7 @@ void allNotesOff() {
 FLASHMEM void updateVolume() {
   mainVol = (float)mux23 / 1024;
   showCurrentParameterPage("Volume", String(mux23 >> 3));
-  updateScreen();
+  startParameterDisplay();
   midiCCOut(CCvolumeControl, (mux23 >> 3), 1);
 }
 
@@ -760,12 +768,18 @@ FLASHMEM void updateVolume() {
 FLASHMEM void updateMainOctave() {
   if (MAIN_OCT_1 > 511) {
     octave = 0.5;
+    showCurrentParameterPage("Main Octave", "-1");
+    startParameterDisplay();
     midiCCOut(CCoctave_1, 0, 1);
   } else if (MAIN_OCT_1 < 511 && MAIN_OCT_2 < 511) {
     octave = 1;
+    showCurrentParameterPage("Main Octave", "0");
+    startParameterDisplay();
     midiCCOut(CCoctave_1, 63, 1);
   } else if (MAIN_OCT_2 > 511) {
     octave = 2;
+    showCurrentParameterPage("Main Octave", "+1");
+    startParameterDisplay();
     midiCCOut(CCoctave_1, 127, 1);
   }
 }
@@ -778,12 +792,18 @@ FLASHMEM void updateMainOctave() {
 FLASHMEM void updateOctaveB() {
   if (B_OCTAVE_1 > 511) {
     octaveB = 0.5;
+    showCurrentParameterPage("OscB Octave", "-1");
+    startParameterDisplay();
     midiCCOut(CCosc_b_oct_1, 0, 1);
   } else if (B_OCTAVE_1 < 511 && B_OCTAVE_2 < 511) {
     octaveB = 1;
+    showCurrentParameterPage("OscB Octave", "0");
+    startParameterDisplay();
     midiCCOut(CCosc_b_oct_1, 63, 1);
   } else if (B_OCTAVE_2 > 511) {
     octaveB = 2;
+    showCurrentParameterPage("OscB Octave", "+1");
+    startParameterDisplay();
     midiCCOut(CCosc_b_oct_1, 127, 1);
   }
 }
@@ -793,12 +813,18 @@ FLASHMEM void updateOctaveB() {
 FLASHMEM void updateOctaveC() {
   if (C_OCTAVE_1 > 511) {
     octaveC = 0.5;
+    showCurrentParameterPage("OscC Octave", "-1");
+    startParameterDisplay();
     midiCCOut(CCosc_c_oct_1, 0, 1);
   } else if (C_OCTAVE_1 < 511 && C_OCTAVE_2 < 511) {
     octaveC = 1;
+    showCurrentParameterPage("OscC Octave", "0");
+    startParameterDisplay();
     midiCCOut(CCosc_c_oct_1, 63, 1);
   } else if (C_OCTAVE_2 > 511) {
     octaveC = 2;
+    showCurrentParameterPage("OscB Octave", "+1");
+    startParameterDisplay();
     midiCCOut(CCosc_c_oct_1, 127, 1);
   }
 }
@@ -807,12 +833,18 @@ FLASHMEM void updateOctaveC() {
 FLASHMEM void updateShapeA() {
   if (A_SHAPE_1 > 511) {
     shapeA = 0;
+    showCurrentParameterPage("OscA Wave", "Square");
+    startParameterDisplay();
     midiCCOut(CCosc_a_shape_1, 0, 1);
   } else if (A_SHAPE_1 < 511 && A_SHAPE_2 < 511) {
     shapeA = 1;
+    showCurrentParameterPage("OscA Wave", "Sawtooth");
+    startParameterDisplay();
     midiCCOut(CCosc_a_shape_1, 63, 1);
   } else if (A_SHAPE_2 > 511) {
     shapeA = 2;
+    showCurrentParameterPage("OscA Wave", "Triangle");
+    startParameterDisplay();
     midiCCOut(CCosc_a_shape_1, 127, 1);
   }
 }
@@ -821,12 +853,18 @@ FLASHMEM void updateShapeA() {
 FLASHMEM void updateShapeB() {
   if (B_SHAPE_1 > 511) {
     shapeB = 0;
+    showCurrentParameterPage("OscB Wave", "Square");
+    startParameterDisplay();
     midiCCOut(CCosc_b_shape_1, 0, 1);
   } else if (B_SHAPE_1 < 511 && B_SHAPE_2 < 511) {
     shapeB = 1;
+    showCurrentParameterPage("OscB Wave", "Sawtooth");
+    startParameterDisplay();
     midiCCOut(CCosc_b_shape_1, 63, 1);
   } else if (B_SHAPE_2 > 511) {
     shapeB = 2;
+    showCurrentParameterPage("OscB Wave", "Triangle");
+    startParameterDisplay();
     midiCCOut(CCosc_b_shape_1, 127, 1);
   }
 }
@@ -835,7 +873,8 @@ FLASHMEM void updateShapeB() {
 FLASHMEM void updateShapeC() {
   shapeC = mux11;
   midiCCOut(CCosc_C_shape, (mux11 >> 3), 1);
-  //Serial.println("Shape C ");
+  showCurrentParameterPage("OscC Wave", String(map(mux11, 0, 1023, 1, 28)));
+  startParameterDisplay();
 }
 
 //tuneB
@@ -861,27 +900,37 @@ FLASHMEM void updateTuneC() {
 //Cross mod
 FLASHMEM void updateCrossMod() {
   crossMod = (float)mux14 / 512;
+  showCurrentParameterPage("Cross Mod", String(mux14 >> 3));
+  startParameterDisplay();
   midiCCOut(CCcrossmod, (mux14 >> 3), 1);
 }
 
 
 FLASHMEM void updateVolA() {
   vcoAvol = (float)mux10 / 1023;
+  showCurrentParameterPage("OscA Volume", String(mux10 >> 3));
+  startParameterDisplay();
   midiCCOut(CCosc_A_vol, (mux10 >> 3), 1);
 }
 
 FLASHMEM void updateVolB() {
   vcoBvol = (float)mux9 / 1023;
+  showCurrentParameterPage("OscB Volume", String(mux9 >> 3));
+  startParameterDisplay();
   midiCCOut(CCosc_B_vol, (mux9 >> 3), 1);
 }
 
 FLASHMEM void updateVolC() {
   vcoCvol = (float)mux8 / 1023;
+  showCurrentParameterPage("OscC Volume", String(mux8 >> 3));
+  startParameterDisplay();
   midiCCOut(CCosc_C_vol, (mux8 >> 3), 1);
 }
 
 FLASHMEM void updateSubVol() {
   Subvol = (float)mux17 / 1023;
+  showCurrentParameterPage("Sub Volume", String(mux17 >> 3));
+  startParameterDisplay();
   midiCCOut(CCosc_Subvol, (mux17 >> 3), 1);
 }
 
@@ -893,6 +942,8 @@ FLASHMEM void updateCutoff() {
 
 FLASHMEM void updateRes() {
   res = 4.5 * (float)mux24 / 1023 + 1.1;
+  showCurrentParameterPage("Filter Res", String(mux24 >> 3));
+  startParameterDisplay();
   midiCCOut(CCvcf_resonance, (mux24 >> 3), 1);
 }
 
@@ -916,9 +967,13 @@ FLASHMEM void updateFilterAmount() {
 FLASHMEM void updateFilterMode() {
   if (FILTER_MODE > 511) {
     filterMode = 1;
+    showCurrentParameterPage("Filter Mode", "Low Pass");
+    startParameterDisplay();
     midiCCOut(CCfiltermode, 127, 1);
   } else if (FILTER_MODE < 511) {
     filterMode = 0;
+    showCurrentParameterPage("Filter Mode", "Band Pass");
+    startParameterDisplay();
     midiCCOut(CCfiltermode, 0, 1);
   }
 }
@@ -974,12 +1029,18 @@ FLASHMEM void updateLFOSustain() {
 FLASHMEM void updateLFODestination() {
   if (LFOA_DEST_1 > 511) {  //lfo - pitch
     lfoAdest = 0;
+    showCurrentParameterPage("LFO Dest", "Pitch");
+    startParameterDisplay();
     midiCCOut(CClfo_dest_1, 0, 1);
   } else if (LFOA_DEST_1 < 511 && LFOA_DEST_2 < 511) {  //lfo - filter
     lfoAdest = 1;
+    showCurrentParameterPage("LFO Dest", "Filter");
+    startParameterDisplay();
     midiCCOut(CClfo_dest_1, 63, 1);
   } else if (LFOA_DEST_2 > 511) {  //lfo - amp
     lfoAdest = 2;
+    showCurrentParameterPage("LFO Dest", "Amplifier");
+    startParameterDisplay();
     midiCCOut(CClfo_dest_1, 127, 1);
   }
 }
@@ -988,12 +1049,18 @@ FLASHMEM void updateLFODestination() {
 FLASHMEM void updateLFOShape() {
   if (LFOA_SHAPE_1 > 511) {
     lfoAshape = 0;
+    showCurrentParameterPage("LFO Wave", "Triangle");
+    startParameterDisplay();
     midiCCOut(CClfo_wave_1, 0, 1);
   } else if (LFOA_SHAPE_1 < 511 && LFOA_SHAPE_2 < 511) {
     lfoAshape = 1;
+    showCurrentParameterPage("LFO Wave", "Saw");
+    startParameterDisplay();
     midiCCOut(CClfo_wave_1, 63, 1);
   } else if (LFOA_SHAPE_2 > 511) {
     lfoAshape = 2;
+    showCurrentParameterPage("LFO Wave", "S & H");
+    startParameterDisplay();
     midiCCOut(CClfo_wave_1, 127, 1);
   }
 }
@@ -2112,6 +2179,12 @@ void loop() {
   checkEncoder();
   MIDI.read(midiChannel);
   usbMIDI.read(midiChannel);
+
+  if (waitingToUpdate && (millis() - lastDisplayTriggerTime >= displayTimeout)) {
+    state = PATCH;
+    updateScreen();  // retrigger
+    waitingToUpdate = false;
+  }
 
   //cross mod
   modMix1.gain(0, crossMod);
