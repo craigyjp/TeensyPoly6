@@ -10,6 +10,8 @@ byte modWheelDepth;
 byte afterTouchDepth;
 byte NP;
 
+int cutoffstr = 0;
+
 byte ccChannel = midiChannel;
 byte midiOutCh = midiChannel;
 boolean patchRecall = false;

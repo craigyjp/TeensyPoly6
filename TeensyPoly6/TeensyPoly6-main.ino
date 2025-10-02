@@ -937,6 +937,8 @@ FLASHMEM void updateSubVol() {
 //Filter
 FLASHMEM void updateCutoff() {
   cut = 15000 * (float)mux25 / 1023 + 15;  /////cut
+  showCurrentParameterPage("Filter Cutoff", String(cutoffstr) + " Hz");
+  startParameterDisplay();
   midiCCOut(CCvcf_frequency, (mux25 >> 3), 1);
 }
 
@@ -1171,6 +1173,7 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCvcf_frequency:
       mux25 = (value << 3);
+      cutoffstr = FILTERFREQS[value];
       updateCutoff();
       break;
 
@@ -2181,7 +2184,6 @@ void loop() {
   usbMIDI.read(midiChannel);
 
   if (waitingToUpdate && (millis() - lastDisplayTriggerTime >= displayTimeout)) {
-    state = PATCH;
     updateScreen();  // retrigger
     waitingToUpdate = false;
   }
