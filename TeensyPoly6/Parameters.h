@@ -4,6 +4,7 @@ byte midiChannel = 0;
 unsigned long lastDisplayTriggerTime = 0;
 bool waitingToUpdate = false;
 const unsigned long displayTimeout = 2000;  // e.g. 5 seconds
+bool announce = false;
 
 byte pitchBendRange;
 byte modWheelDepth;
@@ -12,6 +13,13 @@ byte NP;
 
 int cutoffstr = 0;
 float LFOFreqstr = 0;
+int filterAttackstr = 0;
+int filterDecaystr = 0;
+int ampAttackstr = 0;
+int ampDecaystr = 0;
+int lfoAttackstr = 0;
+int lfoDecaystr = 0;
+float PWMFreqstr = 0;
 
 byte ccChannel = midiChannel;
 byte midiOutCh = midiChannel;

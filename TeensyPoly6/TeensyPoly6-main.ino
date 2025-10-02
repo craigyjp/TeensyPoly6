@@ -759,8 +759,10 @@ void allNotesOff() {
 
 FLASHMEM void updateVolume() {
   mainVol = (float)mux23 / 1024;
+  //if (!announce) {
   showCurrentParameterPage("Volume", String(mux23 >> 3));
   startParameterDisplay();
+  //}
   midiCCOut(CCvolumeControl, (mux23 >> 3), 1);
 }
 
@@ -808,7 +810,21 @@ FLASHMEM void updateOctaveB() {
   }
 }
 
+FLASHMEM void updatemonoPoly() {
 
+  if (MONO_POLY_1 < 511 && MONO_POLY_2 < 511) {
+    showCurrentParameterPage("KeyMode", "Polyphonic");
+    startParameterDisplay();
+  }
+  if (MONO_POLY_1 > 511 && MONO_POLY_2 < 511) {
+    showCurrentParameterPage("KeyMode", "Unison");
+    startParameterDisplay();
+  }
+  if (MONO_POLY_1 < 511 && MONO_POLY_2 > 511) {
+    showCurrentParameterPage("KeyMode", "Mono");
+    startParameterDisplay();
+  }
+}
 
 FLASHMEM void updateOctaveC() {
   if (C_OCTAVE_1 > 511) {
@@ -953,11 +969,15 @@ FLASHMEM void updateRes() {
 
 FLASHMEM void updateFilterAttack() {
   filtAtt = (3000 * (float)mux0 / 1023);
+  showCurrentParameterPage("Filter Attack", String(filterAttackstr) + " mS");
+  startParameterDisplay();
   midiCCOut(CCvcf_attack, (mux0 >> 3), 1);
 }
 
 FLASHMEM void updateFilterDecay() {
   filtDec = (3000 * (float)mux1 / 1023);
+  showCurrentParameterPage("Filter Decay", String(filterDecaystr) + " mS");
+  startParameterDisplay();
   midiCCOut(CCvcf_decay, (mux1 >> 3), 1);
 }
 
@@ -971,25 +991,33 @@ FLASHMEM void updateFilterAmount() {
 FLASHMEM void updateFilterMode() {
   if (FILTER_MODE > 511) {
     filterMode = 1;
+    //if (!announce) {
     showCurrentParameterPage("Filter Mode", "Low Pass");
     startParameterDisplay();
+    //}
     midiCCOut(CCfiltermode, 127, 1);
   } else if (FILTER_MODE < 511) {
     filterMode = 0;
+    //if (!announce) {
     showCurrentParameterPage("Filter Mode", "Band Pass");
     startParameterDisplay();
+    //}
     midiCCOut(CCfiltermode, 0, 1);
   }
 }
 
 FLASHMEM void updateAttack() {
   envAtt = 3000 * (float)mux27 / 1023;
+  showCurrentParameterPage("Amp Attack", String(ampAttackstr) + " mS");
+  startParameterDisplay();
   midiCCOut(CCvca_attack, (mux27 >> 3), 1);
 }
 
 FLASHMEM void updateDecay() {
   envDec = 5000 * (float)mux26 / 1023;
   envRel = 5000 * (float)mux26 / 1023;
+  showCurrentParameterPage("Amp Decay", String(ampDecaystr) + " mS");
+  startParameterDisplay();
   midiCCOut(CCvca_decay, (mux26 >> 3), 1);
 }
 
@@ -1019,12 +1047,16 @@ FLASHMEM void updateLFOFreq() {
 FLASHMEM void updateLFOAttack() {
   lfoAdel = 2000 * (float)mux5 / 1024;
   lfoAatt = 3000 * (float)mux5 / 1024;
+  showCurrentParameterPage("LFO Attack", String(lfoAttackstr) + " mS");
+  startParameterDisplay();
   midiCCOut(CClfo_attack, (mux5 >> 3), 1);
 }
 
 FLASHMEM void updateLFODecay() {
   lfoAdec = 4000 * (float)mux6 / 1024;
   lfoArel = 4000 * (float)mux6 / 1024;
+  showCurrentParameterPage("LFO Decay", String(lfoDecaystr) + " mS");
+  startParameterDisplay();
   midiCCOut(CClfo_decay, (mux6 >> 3), 1);
 }
 
@@ -1083,6 +1115,8 @@ FLASHMEM void updatePWAmount() {
 
 FLASHMEM void updatePWFreq() {
   lfoBfreq = 5 * (float)mux16 / 1023 + 0.1;
+  showCurrentParameterPage("PWM Rate", String(PWMFreqstr) + " Hz");
+  startParameterDisplay();
   midiCCOut(CCoscpwmrate, (mux16 >> 3), 1);
 }
 
@@ -1193,11 +1227,13 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCvcf_attack:
       mux0 = (value << 3);
+      filterAttackstr = ENVTIMES[value];
       updateFilterAttack();
       break;
 
     case CCvcf_decay:
       mux1 = (value << 3);
+      filterDecaystr = ENVTIMES[value];
       updateFilterDecay();
       break;
 
@@ -1219,11 +1255,13 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CClfo_attack:
       mux5 = (value << 3);
+      lfoAttackstr = ENVTIMES[value];
       updateLFOAttack();
       break;
 
     case CClfo_decay:
       mux6 = (value << 3);
+      lfoDecaystr = ENVTIMES[value];
       updateLFODecay();
       break;
 
@@ -1234,11 +1272,13 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCvca_attack:
       mux27 = (value << 3);
+      ampAttackstr = ENVTIMES[value];
       updateAttack();
       break;
 
     case CCvca_decay:
       mux26 = (value << 3);
+      ampDecaystr = ENVTIMES[value];
       updateDecay();
       break;
 
@@ -1249,6 +1289,7 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCoscpwmrate:
       mux16 = (value << 3);
+      PWMFreqstr = LFOTEMPO[value];
       updatePWFreq();
       break;
 
@@ -1512,6 +1553,7 @@ void myProgramChange(byte channel, byte program) {
 
 void recallPatch(int patchNo) {
   allNotesOff();
+  //announce = true;
   File patchFile = SD.open(String(patchNo).c_str());
   if (!patchFile) {
     Serial.println("File not found");
@@ -1521,6 +1563,7 @@ void recallPatch(int patchNo) {
     setCurrentPatchData(data);
     patchFile.close();
   }
+  //announce = false;
 }
 
 FLASHMEM void setCurrentPatchData(String data[]) {
@@ -1569,6 +1612,8 @@ FLASHMEM void setCurrentPatchData(String data[]) {
   afterTouchDepth = data[42].toInt();
   NP = data[43].toInt();
   unidetune = data[44].toInt();
+  MONO_POLY_1 = data[45].toInt();
+  MONO_POLY_2 = data[46].toInt();
 
   //Patchname
   updatePatchname();
@@ -1580,7 +1625,12 @@ FLASHMEM void setCurrentPatchData(String data[]) {
 }
 
 FLASHMEM String getCurrentPatchData() {
-  return patchName + "," + String(octave) + "," + String(octaveB) + "," + String(octaveC) + "," + String(shapeA) + "," + String(shapeB) + "," + String(shapeC) + "," + String(tuneB) + "," + String(tuneC) + "," + String(crossMod) + "," + String(vcoAvol) + "," + String(vcoBvol) + "," + String(vcoCvol) + "," + String(Subvol) + "," + String(cut) + "," + String(res) + "," + String(filtAtt) + "," + String(filtDec) + "," + String(filtAmt) + "," + String(filterMode) + "," + String(envAtt) + "," + String(envDec) + "," + String(envRel) + "," + String(envSus) + "," + String(lfoAamp) + "," + String(lfoAfreq) + "," + String(lfoAdel) + "," + String(lfoAatt) + "," + String(lfoAdec) + "," + String(lfoArel) + "," + String(lfoAsus) + "," + String(lfoBamp) + "," + String(lfoBfreq) + "," + String(dlyAmt) + "," + String(dlyTimeL) + "," + String(dlyTimeR) + "," + String(revMix) + "," + String(revSize) + "," + String(lfoAdest) + "," + String(lfoAshape) + "," + String(modWheelDepth) + "," + String(pitchBendRange) + "," + String(afterTouchDepth) + "," + String(NP) + "," + String(unidetune);
+  return patchName + "," + String(octave) + "," + String(octaveB) + "," + String(octaveC) + "," + String(shapeA) + "," + String(shapeB) + "," + String(shapeC) + "," + String(tuneB) + "," + String(tuneC)
+   + "," + String(crossMod) + "," + String(vcoAvol) + "," + String(vcoBvol) + "," + String(vcoCvol) + "," + String(Subvol) + "," + String(cut) + "," + String(res) + "," + String(filtAtt) + "," + String(filtDec)
+    + "," + String(filtAmt) + "," + String(filterMode) + "," + String(envAtt) + "," + String(envDec) + "," + String(envRel) + "," + String(envSus) + "," + String(lfoAamp) + "," + String(lfoAfreq)
+     + "," + String(lfoAdel) + "," + String(lfoAatt) + "," + String(lfoAdec) + "," + String(lfoArel) + "," + String(lfoAsus) + "," + String(lfoBamp) + "," + String(lfoBfreq) + "," + String(dlyAmt)
+      + "," + String(dlyTimeL) + "," + String(dlyTimeR) + "," + String(revMix) + "," + String(revSize) + "," + String(lfoAdest) + "," + String(lfoAshape) + "," + String(modWheelDepth) + "," + String(pitchBendRange)
+       + "," + String(afterTouchDepth) + "," + String(NP) + "," + String(unidetune) + "," + String(MONO_POLY_1) + "," + String(MONO_POLY_2);
 }
 
 FLASHMEM void checkMux() {
@@ -1598,10 +1648,12 @@ FLASHMEM void checkMux() {
     switch (muxInput) {
       case 0:
         mux0 = mux1Read;
+        filterAttackstr = ENVTIMES[mux0 / 8];
         updateFilterAttack();
         break;
       case 1:
         mux1 = mux1Read;
+        filterDecaystr = ENVTIMES[mux0 / 8];
         updateFilterDecay();
         break;
       case 2:
@@ -1619,10 +1671,12 @@ FLASHMEM void checkMux() {
         break;
       case 5:
         mux5 = mux1Read;
+        lfoAttackstr = ENVTIMES[mux5 / 8];
         updateLFOAttack();
         break;
       case 6:
         mux6 = mux1Read;
+        lfoDecaystr = ENVTIMES[mux6 / 8];
         updateLFODecay();
         break;
       case 7:
@@ -1677,6 +1731,7 @@ FLASHMEM void checkMux() {
     switch (muxInput) {
       case 0:
         mux16 = mux3Read;
+        PWMFreqstr = LFOTEMPO[mux16 / 8];
         updatePWFreq();
         break;
       case 1:
@@ -1725,10 +1780,12 @@ FLASHMEM void checkMux() {
         break;
       case 2:
         mux26 = mux4Read;
+        ampDecaystr = ENVTIMES[mux26 / 8];
         updateDecay();
         break;
       case 3:
         mux27 = mux4Read;
+        ampAttackstr = ENVTIMES[mux27 / 8];
         updateAttack();
         break;
       case 4:
@@ -1753,6 +1810,7 @@ FLASHMEM void checkMux() {
     switch (muxInput) {
       case 0:
         MONO_POLY_1 = mux5Read;
+        updatemonoPoly();
         break;
       case 1:
         A_SHAPE_1 = mux5Read;
@@ -1819,6 +1877,7 @@ FLASHMEM void checkMux() {
         break;
       case 7:
         MONO_POLY_2 = mux6Read;
+        updatemonoPoly();
         break;
     }
   }

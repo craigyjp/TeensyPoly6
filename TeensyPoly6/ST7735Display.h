@@ -95,14 +95,6 @@ void renderCurrentPatchPage() {
   tft.println(currentPatchName);
 }
 
-void renderEnv(float att, float dec, float sus, float rel)
-{
-  tft.drawLine(100, 94, 100 + (att * 60), 74, ST7735_CYAN);
-  tft.drawLine(100 + (att * 60), 74.0, 100 + ((att + dec) * 60), 94 - (sus / 52), ST7735_CYAN);
-  tft.drawFastHLine(100 + ((att + dec) * 60), 94 - (sus / 52), 40 - ((att + dec) * 60), ST7735_CYAN);
-  tft.drawLine(139, 94 - (sus / 52), 139 + (rel * 60), 94, ST7735_CYAN);
-}
-
 void renderCurrentParameterPage()
 {
   switch (state)
@@ -118,15 +110,6 @@ void renderCurrentParameterPage()
       tft.setCursor(1, 90);
       tft.setTextColor(ST7735_WHITE);
       tft.println(currentValue);
-      switch (paramType)
-      {
-        case FILTER_ENV:
-          //renderEnv(vcf_attack * 0.0016, vcf_decay * 0.0016, vcf_sustain * 8, vcf_release * 0.0016);
-          break;
-        case AMP_ENV:
-          //renderEnv(vca_attack * 0.0016, vca_decay * 0.0016, vca_sustain * 8, vca_release * 0.0016);
-          break;
-      }
       break;
   }
 }
